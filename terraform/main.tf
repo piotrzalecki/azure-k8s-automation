@@ -18,6 +18,7 @@ resource "azurerm_kubernetes_cluster" "wordpress" {
   resource_group_name = azurerm_resource_group.wordpress.name
   dns_prefix          = "wordpress-k8s"
 
+
   default_node_pool {
     name            = "default"
     node_count      = 2
@@ -43,6 +44,7 @@ resource "azurerm_kubernetes_cluster" "wordpress" {
     environment = "production"
     application = "wordpress"
   }
+
 }
 
 # ###########
@@ -83,7 +85,7 @@ resource "azurerm_virtual_network" "wordpress" {
   name                = "wordpress-vn"
   location            = azurerm_resource_group.wordpress.location
   resource_group_name = azurerm_resource_group.wordpress.name
-  address_space       = ["10.0.0.0/16"]
+  address_space       = ["10.1.0.0/16"]
 
   tags = {
     environment = "production"
@@ -95,26 +97,20 @@ resource "azurerm_subnet" "wordpress" {
   name                 = "wordpress-subnet"
   resource_group_name  = azurerm_resource_group.wordpress.name
   virtual_network_name = azurerm_virtual_network.wordpress.name
-  address_prefixes     = ["10.0.0.0/16"]
+  address_prefixes     = ["10.1.0.0/16"]
+  service_endpoints = ["Microsoft.Sql"]
 
-  delegation {
-    name = "delegation"
-    service_delegation {
-      name    = "Microsoft.ContainerInstance/containerGroups"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
-    }
-  }
 }
 #################
 # DATABASE
 ################
 
 resource "azurerm_mysql_server" "wordpress" {
-  name                = "wordpress-mysqlserver"
+  name                = "wordpress-database-server"
   location            = azurerm_resource_group.wordpress.location
   resource_group_name = azurerm_resource_group.wordpress.name
 
-  administrator_login          = "admin"
+  administrator_login          = "dbadmin"
   administrator_login_password = var.dbpass
 
   sku_name   = "B_Gen5_2"
